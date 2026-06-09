@@ -26,6 +26,6 @@ export const authMiddleware = async (
 
     next(); // ✅ allow access
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: err });
   }
 };
