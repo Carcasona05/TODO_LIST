@@ -1,12 +1,20 @@
 import express from "express";
-import dotenev from "dotenv";
+import cors from "cors";
+import dotenv from "dotenv";
+import authRoutes from "./src/routes/authRoutes.ts";
 
-dotenev.config();
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
-app.get ("/", (req, res) => {
+// register middleware before routes so CORS and body parsing apply to all routes
+app.use(cors());
+app.use(express.json());
+
+app.use("/api", authRoutes);
+
+app.get("/", (req, res) => {
   res.send("It is working");
 });
 

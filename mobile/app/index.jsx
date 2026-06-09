@@ -6,7 +6,7 @@ export default function Index() {
   return (
     <View>
       <Text>Welcome</Text>
-      <Button title="Go to Login" onPress={() => router.push("/login")} />
+      <Button title="Go to Login" onPress={() => router.replace("/(auth)/login")} />
     </View>
   );
 }
