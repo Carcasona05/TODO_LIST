@@ -3,6 +3,35 @@ import { TaskService } from "../services/taskService.ts";
 import type { User } from "@supabase/supabase-js";
 
 export const TaskController = {
+
+    async getHistory(req: Request & {user?: User; token: string}, res: Response){
+        const user = req.user;
+
+        if(!user){
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const { data, error } = await TaskService.getHistory(user.id, req.token);
+
+        if (error) return res.status(400).json({ error });
+
+        res.json(data);
+    },
+
+    async getTrash(req: Request & {user?: User; token: string}, res: Response){
+        const user = req.user
+
+        if(!user){
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const { data, error } = await TaskService.getTrash(user.id, req.token);
+
+        if(error) return res.status(400).json({ error });
+
+        res.json(data);
+    },
+
     async getTasks(req: Request & {user?: User; token: string} , res: Response) {
         const user = req.user;
 
@@ -50,6 +79,25 @@ export const TaskController = {
         if (error) return res.status(400).json({ error });
 
         res.json(data);
+     },
+     async recentDeletedTask(req: Request & {user?: User; token: string }, res: Response){
+        const user = req.user;
+        const rawId = req.params.id;
+        const id = Array.isArray(rawId) ? rawId[0]: rawId;
+
+        if (!user) {
+            return res.status(401).json({ error: "Unauthorized "});
+        }
+
+         if (!id) {
+            return res.status(400).json({ error: "Missing task id" });
+        }
+        const { data, error } = await TaskService.recentDeletedTask(id, user.id, req.token);
+
+        if (error) return res.status(400).json({ error });
+
+        res.json(data);
+
      },
 
      async deleteTask(req: Request & {user?: User; token: string}, res: Response){

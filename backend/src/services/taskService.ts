@@ -8,10 +8,38 @@ interface UpdateTaskInput {
 }
 
 export const TaskService = {
+
     async getTasks(userId: string, token: string) {
         const supabaseUser = createSupabaseUser(token);
 
-        return supabaseUser.from("tasks").select("*").eq("user_id", userId);
+        return supabaseUser
+        .from("tasks")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("done", false)
+        .is("deleted_at", null);
+    },
+    
+    async getHistory(userId: string, token: string)  {
+        const supabaseUser = createSupabaseUser(token);
+
+        return supabaseUser
+        .from("tasks")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("done", true)
+        .is("deleted_at", null);
+        
+    },
+    
+    async getTrash(userId: string, token: string){
+        const supabaseUser = createSupabaseUser(token);
+
+        return supabaseUser
+        .from("tasks")
+        .select("*")
+        .eq("user_id", userId)
+        .not("deleted_at", "is", null);
     },
 
     async createTask(userId: string, text: string, token: string) {
@@ -31,6 +59,16 @@ export const TaskService = {
         return supabaseUser
         .from("tasks")
         .update(data)
+        .eq("id", id)
+        .eq("user_id", userId);
+    },
+
+    async recentDeletedTask(id: string, userId: string, token: string){
+        const supabaseUser = createSupabaseUser(token);
+
+        return supabaseUser
+        .from("tasks")
+        .update({ deleted_at: new Date().toISOString() })
         .eq("id", id)
         .eq("user_id", userId);
     },

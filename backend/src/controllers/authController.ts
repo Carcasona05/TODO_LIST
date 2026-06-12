@@ -14,8 +14,7 @@ export const register = async (req: Request, res: Response) => {
       },
     },
   });
-  console.log("SUPABASE DATA:", data);
-console.log("SUPABASE ERROR:", error);
+  
   if (error) return res.status(400).json({ error: error.message });
 
   res.json({ message: "Registered", data });

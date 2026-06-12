@@ -80,7 +80,7 @@ export default function Home() {
   // DELEETING TASK
   const deleteTask = async (id) => {
     try {
-      await API.delete(`/deletetask/${id}`);
+      await API.put(`/trash/${id}`);
       
       setTasks(tasks.filter((t) => t.id !== id ));
       
@@ -98,19 +98,24 @@ export default function Home() {
   const saveEdit = async () => {
     if (!editText.trim()) return;
 
-    try {
-      const res = await API(`/updatetask/${editingId}`, {
-        text: editText.trim(),
-      })
+    const newText = editText.trim();
 
-      setTasks(tasks.map((t) => (t.id === editingId ? res.data : t )));
+    setTasks(prev =>
+      prev.map(t =>
+        t.id === editingId ? { ...t, text: newText } : t
+      )
+    );
+
+    try {
+      await API.put(`/updatetask/${editingId}`, {
+        text: newText,
+      });
+
       setEditingId(null);
       setEditText("");
-
     } catch (err) {
       console.log("Edit error:", err.response?.data || err.message);
     }
-
   };
 
   const renderItem = ({ item }) => (

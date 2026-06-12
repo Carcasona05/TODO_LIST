@@ -1,0 +1,6 @@
+## MINOR CHANGES ##
+How about an expiration time when you done task
+
+## MAJOR FEATURE ##
+- PROFILE (just normal editing)
+- AI integration (Suggest user his list based on activities. gives insights.)
