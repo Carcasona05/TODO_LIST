@@ -1,7 +1,9 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+
 import authRoutes from "./src/routes/authRoutes.ts";
+import taskRoutes from "./src/routes/taskRoutes.ts";
 
 dotenv.config();
 
@@ -13,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api", authRoutes);
+app.use("/api", taskRoutes)
 
 app.get("/", (req, res) => {
   res.send("It is working");

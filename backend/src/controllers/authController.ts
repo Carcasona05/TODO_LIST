@@ -3,11 +3,16 @@ import { supabase } from "../config/supabase.ts";
 
 export const register = async (req: Request, res: Response) => {
  
-  const { email, password } = req.body;
+  const { name, email, password } = req.body;
 
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        name,
+      },
+    },
   });
   console.log("SUPABASE DATA:", data);
 console.log("SUPABASE ERROR:", error);

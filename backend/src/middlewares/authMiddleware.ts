@@ -1,11 +1,13 @@
 import type { Request, Response, NextFunction } from "express";
+import type { User } from "@supabase/supabase-js";
 import { supabase } from "../config/supabase.ts";
 
 export const authMiddleware = async (
-  req: Request,
+  req: Request & { user?: User; token?: string },
   res: Response,
   next: NextFunction
 ) => {
+  
   try {
     const authHeader = req.headers.authorization;
 
@@ -13,7 +15,11 @@ export const authMiddleware = async (
       return res.status(401).json({ error: "No token provided" });
     }
 
-    const token = authHeader.replace("Bearer ", "");
+    const [type, token] = authHeader.split(" ");
+
+    if (type !== "Bearer" || !token) {
+      return res.status(401).json({ error: "Invalid token format" });
+    }
 
     const { data, error } = await supabase.auth.getUser(token);
 
@@ -22,9 +28,11 @@ export const authMiddleware = async (
     }
 
     // attach user to request
-    (req as any).user = data.user;
+    req.user = data.user;
+    req.token = token;
 
-    next(); // ✅ allow access
+    next(); 
+    
   } catch (err) {
     res.status(500).json({ error: err });
   }
