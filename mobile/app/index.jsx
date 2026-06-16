@@ -6,7 +6,7 @@ export default function Index() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>TODO LIST + AI</Text>
-      <TouchableOpacity style={styles.button} onPress={() => router.replace("/(auth)/login")}>
+      <TouchableOpacity style={styles.button} onPress={() => router.replace("/(module)/home")}>
         <Text style={styles.buttonText}>Go to Login</Text>
       </TouchableOpacity>
     </View>

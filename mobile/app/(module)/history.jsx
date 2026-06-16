@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import API from "../../services/api";
@@ -21,9 +22,11 @@ export default function History() {
   const [clearModalVisible, setClearModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState(null);
-
+  const [bulkDeleteModalVisible, setBulkDeleteModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
   const fetchTasks = async () => {
     try {
+      setLoading(true);
       const historyRes = await API.get("/history");
       const trashRes = await API.get("/gettrash");
 
@@ -32,6 +35,8 @@ export default function History() {
       
     } catch (err) {
       console.log("Fetch error: ", err.response?.data || err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -74,6 +79,10 @@ export default function History() {
     setDeleteModalVisible(true);
   };
 
+  const confirmPermanentDeleteAll = () => {
+    setBulkDeleteModalVisible(true);
+  };
+
   const permanentlyDelete = async () => {
    try {
     if (!selectedItemId) return;
@@ -92,6 +101,26 @@ export default function History() {
    }
   };
 
+  const permanentlyDeleteAll = async () => {
+    try {
+      if (!recentlyDeleted || recentlyDeleted.length === 0) return;
+
+      await Promise.all(
+        recentlyDeleted.map(item => API.delete(`/deletetask/${item.id}`))
+      );
+
+      fetchTasks();
+
+    } catch (err) {
+      console.log("Bulk Delete Error:", err.response?.data || err.message);
+
+    } finally {
+      setBulkDeleteModalVisible(false);
+    }
+  };
+
+    if (loading) return <View style ={{justifyContent:"center", alignItems:"center", flex:1}}><ActivityIndicator size = "large" /></View>;
+
   // ── Render: History item ──
   const renderHistoryItem = ({ item }) => (
     <View style={styles.card}>
@@ -100,7 +129,7 @@ export default function History() {
       </View>
       <View style={styles.info}>
         <Text style={styles.taskText}>{item.text}</Text>
-        <Text style={styles.date}>Completed on {new Date(item.done_at).toLocaleDateString}</Text>
+        <Text style={styles.date}>Completed on {new Date(item.done_at).toLocaleDateString()}</Text>
       </View>
     </View>
   );
@@ -119,7 +148,7 @@ export default function History() {
         </View>
         <View style={styles.info}>
           <Text style={[styles.taskText, styles.deletedText]}>{item.text}</Text>
-          <Text style={styles.date}>Completed on {item.doneAt}</Text>
+          <Text style={styles.date}>Completed on {item.done_at ? new Date(item.done_at).toLocaleDateString(): "No Date"}</Text>
           <Text style={[styles.daysLeft, daysLeft <= 3 && styles.daysLeftUrgent]}>
             Auto-deleted in {daysLeft} day{daysLeft !== 1 ? 's' : ''}
           </Text>
@@ -183,14 +212,20 @@ export default function History() {
             <Text style={styles.emptySubtext}>Items moved here will auto-delete after 30 days</Text>
           </View>
         ) : (
-          <FlatList
-            data={recentlyDeleted}
-            keyExtractor={(item) => item.id}
-            renderItem={renderDeletedItem}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-          />
+          <>
+            <FlatList
+              data={recentlyDeleted}
+              keyExtractor={(item) => item.id}
+              renderItem={renderDeletedItem}
+              contentContainerStyle={styles.list}
+              showsVerticalScrollIndicator={false}
+            />
+            <TouchableOpacity style={styles.deleteAllBtn} onPress={confirmPermanentDeleteAll}>
+              <Text style={styles.deleteAllText}>Delete all permanently</Text>
+            </TouchableOpacity>
+          </>
         )
+        
       ) : (
         /* ── Content: History ── */
         history.length === 0 ? (
@@ -277,6 +312,39 @@ export default function History() {
                 onPress={permanentlyDelete}
               >
                 <Text style={styles.permDeleteText}>Permanently Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ═══════════════════════════════════════════════
+          MODAL: Permanent Delete ALL Confirmation
+          ═══════════════════════════════════════════════ */}
+      <Modal
+        animationType="fade"
+        transparent
+        visible={bulkDeleteModalVisible}
+        onRequestClose={() => setBulkDeleteModalVisible(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Permanently Delete All?</Text>
+            <Text style={styles.modalBody}>
+              All {recentlyDeleted.length} items in Recently Deleted will be permanently removed and cannot be recovered.
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.cancelBtn]}
+                onPress={() => setBulkDeleteModalVisible(false)}
+              >
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.permDeleteBtn]}
+                onPress={permanentlyDeleteAll}
+              >
+                <Text style={styles.permDeleteText}>Delete All</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -471,6 +539,21 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     fontSize: 15,
     fontWeight: '600',
+  },
+
+  /* Delete all permanently button (Recently Deleted) */
+  deleteAllBtn: {
+    margin: 16,
+    marginBottom: 6,
+    backgroundColor: '#7f1d1d',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  deleteAllText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
   },
 
   /* Modal styles */

@@ -12,7 +12,7 @@ export const TaskService = {
     async getTasks(userId: string, token: string) {
         const supabaseUser = createSupabaseUser(token);
 
-        return supabaseUser
+        return await supabaseUser
         .from("tasks")
         .select("*")
         .eq("user_id", userId)
@@ -23,7 +23,7 @@ export const TaskService = {
     async getHistory(userId: string, token: string)  {
         const supabaseUser = createSupabaseUser(token);
 
-        return supabaseUser
+        return await supabaseUser
         .from("tasks")
         .select("*")
         .eq("user_id", userId)
@@ -35,7 +35,7 @@ export const TaskService = {
     async getTrash(userId: string, token: string){
         const supabaseUser = createSupabaseUser(token);
 
-        return supabaseUser
+        return await supabaseUser
         .from("tasks")
         .select("*")
         .eq("user_id", userId)
@@ -46,7 +46,7 @@ export const TaskService = {
         
         const supabaseUser = createSupabaseUser(token);
 
-        return supabaseUser.from("tasks").insert({
+        return await supabaseUser.from("tasks").insert({
             user_id: userId,
             text
         })
@@ -56,7 +56,7 @@ export const TaskService = {
 
     async updateTask(id: string, userId: string, data: UpdateTaskInput, token: string){
         const supabaseUser = createSupabaseUser(token);
-        return supabaseUser
+        return await supabaseUser
         .from("tasks")
         .update(data)
         .eq("id", id)
@@ -66,7 +66,7 @@ export const TaskService = {
     async recentDeletedTask(id: string, userId: string, token: string){
         const supabaseUser = createSupabaseUser(token);
 
-        return supabaseUser
+        return await supabaseUser
         .from("tasks")
         .update({ deleted_at: new Date().toISOString() })
         .eq("id", id)
@@ -76,7 +76,7 @@ export const TaskService = {
     async deleteTask(id: string, userId: string, token: string){
         const supabaseUser = createSupabaseUser(token);
 
-        return supabaseUser
+        return await supabaseUser
         .from("tasks")
         .delete()
         .eq("id", id)

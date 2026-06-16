@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import API from "../../services/api"
@@ -31,6 +32,10 @@ export default function Home() {
       setTasks(safeTasks);
       
     } catch (err) {
+      if(err.response?.status === 401) {
+        Alert.alert("Session expired", "Please log in first");
+        router.replace("/(auth)/login");
+      }
       console.log("Fetch Error:", err.response?.data || err.message);
     } finally {
       setLoading(false);

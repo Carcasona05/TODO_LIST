@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,24 +7,57 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import API from "../../services/api";
 
 export default function Profile() {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState('Alex Johnson');
-  const [email, setEmail] = useState('alex@example.com');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await API.get("/auth/profile");
+      const user = res.data || [];
+      
+      setName(user.name ?? '');
+      setEmail(user.email ?? '');
+      console.log("PROFILE RESPONSE:", res.data);
+      
+    } catch (error) {
+      console.log("Error fetching profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleSave = () => {
+
     if (!name.trim() || !email.trim()) {
       Alert.alert('Error', 'Name and email are required');
       return;
     }
-    setIsEditing(false);
-    setPassword('');
-    Alert.alert('Success', 'Profile updated');
+
+    API.put("/auth/update", { name, email, password })
+      .then(() => {
+        setIsEditing(false);
+        setPassword('');
+        Alert.alert('Success', 'Profile updated, Please log in again');
+        router.replace('/(auth)/login');
+      })
+      .catch((error) => {
+        console.error("Error updating profile:", error);
+        Alert.alert('Error', 'Failed to update profile');
+      });
   };
 
   const handleLogout = () => {
@@ -38,7 +71,9 @@ export default function Profile() {
     );
   };
 
+    if (loading) return <View style ={{justifyContent:"center", alignItems:"center", flex:1}}><ActivityIndicator size = "large" /></View>;
   return (
+
     <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
       <View style={styles.header}>
         <View style={styles.navRow}>
@@ -52,8 +87,9 @@ export default function Profile() {
             <Text style={styles.navTextActive}>Profile</Text>
           </TouchableOpacity>
         </View>
+        
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
+          <Text style={styles.avatarText}>{name?.charAt(0)?.toUpperCase() || ''}</Text>
         </View>
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.email}>{email}</Text>
